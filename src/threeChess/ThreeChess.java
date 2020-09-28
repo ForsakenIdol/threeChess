@@ -12,7 +12,7 @@ import java.util.Random;
  * **/
 public class ThreeChess{
 
-  private final static int pause = 1000;//The pause in milliseconds between updating the graphical board
+  private final static int pause = 100;//The pause in milliseconds between updating the graphical board
   private final static int[][] perms = {{0,1,2},{0,2,1},{1,0,2},{1,2,0},{2,0,1},{2,1,0}};//to randomise play order
   private final static Random random = new Random();
   
@@ -234,7 +234,7 @@ public class ThreeChess{
    * Run program with parameter "manual" for a game with moves added in the command line, "cheat" to ignore all rules, and no parameters to run a tournament between agents listed in bots.
    **/
   public static void main(String[] args){
-    Agent[] bots = {new RandomAgent(), new Agent22466497(), new Agent22466497()};
+    Agent[] bots = {new RandomAgent(), new RandomAgent(), new Agent22466497()};
     if(args.length > 0 && args[0].equals("manual")){
       bots = new Agent[] {new ManualAgent("A"), new ManualAgent("B"), new ManualAgent("C")};
       tournament(bots,60,0,true, null);
