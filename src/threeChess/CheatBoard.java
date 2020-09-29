@@ -1,7 +1,5 @@
 package threeChess;
 
-import java.util.*;
-
 /**
  * Main class for representing game state.
  * The board maps each position to the piece at that posiiton, 
@@ -25,5 +23,10 @@ public class CheatBoard extends Board implements Cloneable{
    * **/
   public boolean isLegalMove(Position start, Position end){
     return true;
+  }
+
+  /** All moves are legal so pointless to display. **/
+  public boolean displayLegalMoves() {
+    return false;
   }
 }

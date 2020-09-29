@@ -27,7 +27,6 @@ public class Board implements Cloneable, Serializable {
   /**A Map representing the remaining time allowed for each player, in milliseconds**/
   private HashMap<Colour,Integer> timeLeft;
 
-
   /**
    * Initialises the board, placing all pieces at their initial position.
    * Note, unlike two person chess, the Queen is always on the left, and the King is always on his own colour.
@@ -55,8 +54,10 @@ public class Board implements Cloneable, Serializable {
     }
   }
 
-  
-
+  /** @return whether in manual mode, the legal moves should be displayed on the board. **/
+  public boolean displayLegalMoves() {
+    return true;
+  }
 
   /**
    * Return a set of all the positions of pieces belonging to a player.
@@ -74,9 +75,7 @@ public class Board implements Cloneable, Serializable {
     return positions;
   }
 
-  /**
-   * @return a set of all the pieces captured by {@param player}.
-   */
+  /** @return a set of all the pieces captured by {@param player}. **/
   public List<Piece> getCaptured(Colour player) {
     return new ArrayList<>(captured.get(player));
   }
@@ -119,7 +118,7 @@ public class Board implements Cloneable, Serializable {
       current = next;
     }
     return current;
-  } 
+  }
 
   /**
    * Checks if a move is legal. 
@@ -185,7 +184,8 @@ public class Board implements Cloneable, Serializable {
               Piece castle = board.get(Position.get(mCol,0,7));
               Piece empty1 = board.get(Position.get(mCol,0,5));
               Piece empty2 = board.get(Position.get(mCol,0,6));
-              if(castle.getType()==PieceType.ROOK && castle.getColour()==mover.getColour() && empty1==null && empty2==null)
+              if(castle!=null && castle.getType()==PieceType.ROOK && castle.getColour()==mover.getColour()
+                  && empty1==null && empty2==null)
                 return true;
             }
             if(end==Position.get(mCol,0,2)){
@@ -193,7 +193,8 @@ public class Board implements Cloneable, Serializable {
               Piece empty1 = board.get(Position.get(mCol,0,1));
               Piece empty2 = board.get(Position.get(mCol,0,2));
               Piece empty3 = board.get(Position.get(mCol,0,3));
-              if(castle.getType()==PieceType.ROOK && castle.getColour()==mover.getColour() && empty1==null && empty2==null && empty3==null)
+              if(castle!=null && castle.getType()==PieceType.ROOK && castle.getColour()==mover.getColour()
+                  && empty1==null && empty2==null && empty3==null)
                 return true;
             }
           }
@@ -225,7 +226,6 @@ public class Board implements Cloneable, Serializable {
     }
     return false;//move did not match any legal option.
   }
-
 
   /**
    * Executes a legal move. 
@@ -407,7 +407,3 @@ public class Board implements Cloneable, Serializable {
     return clone;
   }
 }
-
-
-
-
