@@ -2,6 +2,7 @@ package threeChess.agents;
 
 import threeChess.Agent;
 import threeChess.Board;
+import threeChess.Piece;
 import threeChess.Position;
 
 import java.io.FileInputStream;
@@ -12,6 +13,8 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Represents a state-action pair.
@@ -149,7 +152,7 @@ public class Agent22466497 extends Agent {
    * @param n the number of times that state-action pair has been visited.
    * @return a possibly inflated utility value.
    */
-  private double f(double u, int n) { return (n < 10 ? Double.MAX_VALUE : u); }
+  private double f(double u, int n) { return (n < 15 ? Double.MAX_VALUE : u); }
 
   /**
    * The board object tracks the number of moves (getMoveCount) and a list of all the moves so far (getMove).
@@ -172,11 +175,25 @@ public class Agent22466497 extends Agent {
       } catch (Exception e) { System.out.println("Reached a block that should not be reached: " + e); } // We should NEVER end up here.
     }
     // Here we have 2 boards, previous and current.
-    // We generate the reward value for a board position.
-    int diffPieces = current.getPositions(current.getTurn()).size() - previous.getPositions(current.getTurn()).size();
-    int diffCaptures = current.getCaptured(current.getTurn()).size() - previous.getCaptured(current.getTurn()).size();
+    // We generate the reward value for a board position to be the value of our pieces + captured pieces at the current turn,
+    // minus the value of our pieces + captured pieces from the previous turn.
+    Set<Position> currentPositions = current.getPositions(current.getTurn());
+    Set<Position> previousPositions = previous.getPositions(current.getTurn());
+    Piece[] currentPieces = new Piece[currentPositions.size()];
+    Piece[] previousPieces = new Piece[previousPositions.size()];
+    int i = 0;
+    for (Position position : currentPositions) {currentPieces[i] = current.getPiece(position); i++;}
+    i = 0;
+    for (Position position : previousPositions) {previousPieces[i] = previous.getPiece(position); i++;}
+    List<Piece> currentCaptured = current.getCaptured(current.getTurn());
+    List<Piece> previousCaptured = previous.getCaptured(current.getTurn());
+    int currentValue = 0; int previousValue = 0;
+    for (Piece piece : currentPieces) currentValue += piece.getValue();
+    for (Piece piece : currentCaptured) currentValue += piece.getValue();
+    for (Piece piece : previousPieces) previousValue += piece.getValue();
+    for (Piece piece : previousCaptured) previousValue += piece.getValue();
 
-    return (diffPieces + diffCaptures);
+    return currentValue - previousValue;
   }
 
   /**
@@ -204,6 +221,16 @@ public class Agent22466497 extends Agent {
     return success;
   }
 
+  /**
+   * Given 2 moves, returns true if one move is the reverse of the other.
+   * @param move1
+   * @param move2
+   * @return
+   */
+  private boolean isReverse(Position[] move1, Position[] move2) {
+    return (move1.length == 2 && move2.length == 2 && move1[0].equals(move2[1]) && move2[0].equals(move1[1]));
+  }
+
   /* Public Methods */
 
   /**
@@ -225,12 +252,12 @@ public class Agent22466497 extends Agent {
     for (Position[] action : actions) {
       SAPair currPair = new SAPair(board, action);
       double currentUtility = f(Qvalues.getOrDefault(currPair, 0.0), N_sa.getOrDefault(currPair, 0));
-      if (currentUtility > bestUtility) {
+      if (currentUtility > bestUtility && !isReverse(action, a)) {
         bestUtility = currentUtility;
         bestAction = action;
       }
     }
-    s = currentState; r = currentReward;
+    s = currentState; r = currentReward; a = bestAction;
     writeStorage();
     return bestAction;
 
