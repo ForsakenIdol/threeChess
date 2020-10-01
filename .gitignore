@@ -27,3 +27,7 @@ doc/
 
 #agent code
 src/threeChess/agents/
+
+# Persistance files
+NPersistance
+QPersistance

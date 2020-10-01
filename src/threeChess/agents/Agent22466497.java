@@ -12,6 +12,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -41,6 +42,7 @@ public class Agent22466497 extends Agent {
   private final String QPersistance = "QPersistance";
   private final String NPersistance = "NPersistance";
 
+  Position[] pa; // The previous previous action, i.e. the action 2 moves ago.
   // Q-Learning Parameters
   Board s; int r; Position[] a; // Previous state-action-reward "tuple"
   Board currentState; int currentReward;
@@ -50,9 +52,10 @@ public class Agent22466497 extends Agent {
   HashMap<SAPair, Double> Qvalues; // The table of Q-values, i.e. the table of state-action pair utilities.
   HashMap<SAPair, Integer> N_sa; // A 2D table, where <s, a>  keeps track of the number of times action a was performed while in state s.
 
-  // Constructor
+  // Zero argument constructor used for tournaments
   public Agent22466497() {
-    s = null; r = 0; a = new Position[2];
+    pa = new Position[] {null, null};
+    s = null; r = 0; a = new Position[] {null, null};
     currentState = null; currentReward = 0;
     γ = 0.95;
     Qvalues = new HashMap<>();
@@ -66,7 +69,9 @@ public class Agent22466497 extends Agent {
       q_obj.close(); q_in.close();
 
       FileInputStream N_in = new FileInputStream(NPersistance);
-
+      ObjectInputStream N_obj = new ObjectInputStream(N_in);
+      N_sa = (HashMap<SAPair, Integer>) N_obj.readObject();
+      N_obj.close(); N_in.close();
 
     } catch (Exception e) {
       System.out.println(e);
@@ -152,7 +157,7 @@ public class Agent22466497 extends Agent {
    * @param n the number of times that state-action pair has been visited.
    * @return a possibly inflated utility value.
    */
-  private double f(double u, int n) { return (n < 15 ? Double.MAX_VALUE : u); }
+  private double f(double u, int n) { return (n < 5 ? Double.MAX_VALUE : u); }
 
   /**
    * The board object tracks the number of moves (getMoveCount) and a list of all the moves so far (getMove).
@@ -166,14 +171,8 @@ public class Agent22466497 extends Agent {
   private int reward(Board current) {
     int numMoves = current.getMoveCount();
     if (numMoves <= 2) return 0; // Our agent hasn't moved yet.
-    // Reconstruct the board from the start to the last position
-    Board previous = new Board(500);
-    for (int i = 0; i < numMoves - 2; i++) { // The moves are indexed from 1
-      Position[] move = current.getMove(i);
-      try {
-        previous.move(move[0], move[1]);
-      } catch (Exception e) { System.out.println("Reached a block that should not be reached: " + e); } // We should NEVER end up here.
-    }
+    // We don't need to reconstruct the board! We already have it!
+    Board previous = s;
     // Here we have 2 boards, previous and current.
     // We generate the reward value for a board position to be the value of our pieces + captured pieces at the current turn,
     // minus the value of our pieces + captured pieces from the previous turn.
@@ -252,13 +251,17 @@ public class Agent22466497 extends Agent {
     for (Position[] action : actions) {
       SAPair currPair = new SAPair(board, action);
       double currentUtility = f(Qvalues.getOrDefault(currPair, 0.0), N_sa.getOrDefault(currPair, 0));
-      if (currentUtility > bestUtility && !isReverse(action, a)) {
+      if (currentUtility > bestUtility && !(action[0].equals(pa[0]) && action[1].equals(pa[1]))) {
+        //System.out.printf("Action %s is not the same as action %s.\n", Arrays.toString(action), Arrays.toString(pa));
         bestUtility = currentUtility;
         bestAction = action;
       }
     }
-    s = currentState; r = currentReward; a = bestAction;
-    writeStorage();
+    // Update previous values
+    if (a[0] != null) {pa = a.clone();}
+    try {s = (Board) currentState.clone();} catch (Exception e) {System.out.println("Can't clone previous board state.");}
+    r = currentReward; a = bestAction.clone();
+    //writeStorage();
     return bestAction;
 
   }
