@@ -47,6 +47,7 @@ public class Agent22466497 extends Agent {
   Board s; int r; Position[] a; // Previous state-action-reward "tuple"
   Board currentState; int currentReward;
   double γ; // Discount Factor
+  int prevValue; // Optimized calculation for the reward function
 
   // Q-Learning Storage
   HashMap<SAPair, Double> Qvalues; // The table of Q-values, i.e. the table of state-action pair utilities.
@@ -57,7 +58,7 @@ public class Agent22466497 extends Agent {
     pa = new Position[] {null, null};
     s = null; r = 0; a = new Position[] {null, null};
     currentState = null; currentReward = 0;
-    γ = 0.95;
+    γ = 0.95; prevValue = 0;
     Qvalues = new HashMap<>();
     N_sa = new HashMap<>();
 
@@ -176,23 +177,42 @@ public class Agent22466497 extends Agent {
     // Here we have 2 boards, previous and current.
     // We generate the reward value for a board position to be the value of our pieces + captured pieces at the current turn,
     // minus the value of our pieces + captured pieces from the previous turn.
+    int currentValue = 0;
     Set<Position> currentPositions = current.getPositions(current.getTurn());
-    Set<Position> previousPositions = previous.getPositions(current.getTurn());
     Piece[] currentPieces = new Piece[currentPositions.size()];
-    Piece[] previousPieces = new Piece[previousPositions.size()];
     int i = 0;
     for (Position position : currentPositions) {currentPieces[i] = current.getPiece(position); i++;}
-    i = 0;
-    for (Position position : previousPositions) {previousPieces[i] = previous.getPiece(position); i++;}
     List<Piece> currentCaptured = current.getCaptured(current.getTurn());
-    List<Piece> previousCaptured = previous.getCaptured(current.getTurn());
-    int currentValue = 0; int previousValue = 0;
     for (Piece piece : currentPieces) currentValue += piece.getValue();
     for (Piece piece : currentCaptured) currentValue += piece.getValue();
-    for (Piece piece : previousPieces) previousValue += piece.getValue();
-    for (Piece piece : previousCaptured) previousValue += piece.getValue();
 
+    int previousValue = 0;
+    if (prevValue != 0) previousValue = prevValue;
+    else { // Only calculate previous value if haven't already brought the previous value over
+      Set<Position> previousPositions = previous.getPositions(current.getTurn());
+      Piece[] previousPieces = new Piece[previousPositions.size()];
+      i = 0;
+      for (Position position : previousPositions) {previousPieces[i] = previous.getPiece(position); i++;}
+      List<Piece> previousCaptured = previous.getCaptured(current.getTurn());
+      for (Piece piece : previousPieces) previousValue += piece.getValue();
+      for (Piece piece : previousCaptured) previousValue += piece.getValue(); 
+    }
+    
+    prevValue = currentValue;
     return currentValue - previousValue;
+  }
+
+  /**
+   * The vast majority of board states do not have associated utility values. For these board states, we prepare a
+   * utility estimate function in place of the stored actual value of the utility depending on the reward function.
+   * @param currPair
+   * @return
+   */
+  private double utilityEstimate(SAPair currPair) {
+    // For now, we just find the average utility of all the values.
+    double utility = 0.0;
+    for (Double value : Qvalues.values()) utility += value;
+    return utility;
   }
 
   /**
@@ -250,7 +270,8 @@ public class Agent22466497 extends Agent {
     Position[][] actions = validMoves(board);
     for (Position[] action : actions) {
       SAPair currPair = new SAPair(board, action);
-      double currentUtility = f(Qvalues.getOrDefault(currPair, 0.0), N_sa.getOrDefault(currPair, 0));
+      // If the utility value does not yet exist, we estimate the utility using a utility estimate function.
+      double currentUtility = f(Qvalues.getOrDefault(currPair, utilityEstimate(currPair)), N_sa.getOrDefault(currPair, 0));
       if (currentUtility > bestUtility && !(action[0].equals(pa[0]) && action[1].equals(pa[1]))) {
         //System.out.printf("Action %s is not the same as action %s.\n", Arrays.toString(action), Arrays.toString(pa));
         bestUtility = currentUtility;
@@ -261,7 +282,7 @@ public class Agent22466497 extends Agent {
     if (a[0] != null) {pa = a.clone();}
     try {s = (Board) currentState.clone();} catch (Exception e) {System.out.println("Can't clone previous board state.");}
     r = currentReward; a = bestAction.clone();
-    //writeStorage();
+    writeStorage();
     return bestAction;
 
   }
