@@ -2,9 +2,11 @@ package threeChess.agents;
 
 import threeChess.Agent;
 import threeChess.Board;
+import threeChess.Colour;
 import threeChess.Piece;
 import threeChess.Position;
 
+import java.awt.Color;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -14,19 +16,24 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 /**
  * Represents a state-action pair.
+ * The state contains the positions of ALL the pieces on the board to accurately reflect the board state and justify any moves taken. 
  */
 class SAPair implements Serializable {
   private static final long serialVersionUID = 7753905743550444452L;
   Set<Position> state; // Stores the position of all pieces
-  int totalValue; // The total value of all the current player's pieces on the board.
+  int totalValue; // The total value of all the pieces on the board.
   Position[] action;
   SAPair(Board s, Position[] a) {
-    state = s.getPositions(s.getTurn());
+    state = new HashSet<>();
+    state.addAll(s.getPositions(Colour.BLUE));
+    state.addAll(s.getPositions(Colour.GREEN));
+    state.addAll(s.getPositions(Colour.RED));
     totalValue = 0;
     for (Position p : state) {
       // Find the total value of all the current player's pieces
