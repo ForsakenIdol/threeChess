@@ -22,9 +22,18 @@ import java.util.Set;
  */
 class SAPair implements Serializable {
   private static final long serialVersionUID = 7753905743550444452L;
-  Board state;
+  Set<Position> state; // Stores the position of all pieces
+  int totalValue; // The total value of all the current player's pieces on the board.
   Position[] action;
-  SAPair(Board s, Position[] a) {state = s; action = a;}
+  SAPair(Board s, Position[] a) {
+    state = s.getPositions(s.getTurn());
+    totalValue = 0;
+    for (Position p : state) {
+      // Find the total value of all the current player's pieces
+      totalValue += s.getPiece(p).getValue();
+    }
+    action = a;
+  }
 }
 
 /**
@@ -33,7 +42,7 @@ class SAPair implements Serializable {
  * 
  * 
  * Current Issues:
- * 
+ * - The move-pair repeated problem has arisen again.
  * 
  */
 public class Agent22466497 extends Agent {
@@ -158,7 +167,7 @@ public class Agent22466497 extends Agent {
    * @param n the number of times that state-action pair has been visited.
    * @return a possibly inflated utility value.
    */
-  private double f(double u, int n) { return (n < 5 ? Double.MAX_VALUE : u); }
+  private double f(double u, int n) { return (n < 10 ? Double.MAX_VALUE : u); }
 
   /**
    * The board object tracks the number of moves (getMoveCount) and a list of all the moves so far (getMove).
