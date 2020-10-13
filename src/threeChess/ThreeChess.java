@@ -11,7 +11,7 @@ import threeChess.agents.*;
  * **/
 public class ThreeChess{
 
-  private final static int pause = 500;//The pause in milliseconds between updating the graphical board
+  private final static int pause = 200;//The pause in milliseconds between updating the graphical board
   private final static int[][] perms = {{0,1,2},{0,2,1},{1,0,2},{1,2,0},{2,0,1},{2,1,0}};//to randomise play order
   private final static Random random = new Random();
   
@@ -114,6 +114,13 @@ public class ThreeChess{
     int rank = 1;
     for(Statistics stat:results)
       logger.println(rank++ +"\t"+stat.agent+"\t\t"+stat.won+"\t"+stat.lost+"\t"+stat.played+"\t"+stat.average()+"\n");
+    // Write to file at the end of each game for Agent22466497
+    for (Agent bot : bots) {
+      if (bot.getClass().getName().equals("threeChess.agents.Agent22466497")) {
+        //((Agent22466497) bot).writeStorage();
+        System.out.println("Printed Agent22466497's objects to storage.");
+      }
+    }
   }
   
   /**
@@ -237,7 +244,7 @@ public class ThreeChess{
    * Run program with parameter "manual" for a game with moves added in the command line, "cheat" to ignore all rules, and no parameters to run a tournament between agents listed in bots.
    **/
   public static void main(String[] args){
-    Agent[] bots = {new GreedyAgent(), new GreedyAgent(), new Agent22466497()};
+    Agent[] bots = {new RandomAgent(), new RandomAgent(), new Agent22466497()};
     if(args.length > 0 && args[0].equals("manual")){
       bots = new Agent[] {new ManualAgent("A"), new ManualAgent("B"), new ManualAgent("C")};
       tournament(bots,60,0,true, null);
@@ -250,6 +257,6 @@ public class ThreeChess{
       playCheat();
     }
     //else tournament(bots,300,0,true,null);
-    else tournament(bots, 50, 0, true, null);
+    else tournament(bots, 15, 20, false, null);
   }
 }

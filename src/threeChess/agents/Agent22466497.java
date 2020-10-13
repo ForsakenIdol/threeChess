@@ -49,7 +49,7 @@ class SAPair implements Serializable {
  * 
  * 
  * Current Issues:
- * - The move-pair repeated problem has arisen again.
+ *
  * 
  */
 public class Agent22466497 extends Agent {
@@ -64,6 +64,7 @@ public class Agent22466497 extends Agent {
   Board currentState; int currentReward;
   double γ; // Discount Factor
   int prevValue; // Optimized calculation for the reward function
+  int writeCount; // Counter for writing to storage
 
   // Q-Learning Storage
   HashMap<SAPair, Double> Qvalues; // The table of Q-values, i.e. the table of state-action pair utilities.
@@ -74,7 +75,7 @@ public class Agent22466497 extends Agent {
     pa = new Position[] {null, null};
     s = null; r = 0; a = new Position[] {null, null};
     currentState = null; currentReward = 0;
-    γ = 0.95; prevValue = 0;
+    γ = 0.95; prevValue = 0; writeCount = 0;
     Qvalues = new HashMap<>();
     N_sa = new HashMap<>();
 
@@ -226,16 +227,18 @@ public class Agent22466497 extends Agent {
    */
   private double utilityEstimate(SAPair currPair) {
     // For now, we just find the average utility of all the values.
-    double utility = 0.0;
-    for (Double value : Qvalues.values()) utility += value;
-    return utility;
+    double utility = 0.0; int count = 0;
+    for (Double value : Qvalues.values()) {
+      utility += value; count++;
+    }
+    return (utility / count);
   }
 
   /**
    * Writes the Q-storage objects to file.
    * @return true on successful write, and false if otherwise.
    */
-  private boolean writeStorage() {
+  public boolean writeStorage() {
     boolean success = true;
     try {
       FileOutputStream q_out = new FileOutputStream(QPersistance);
@@ -298,7 +301,14 @@ public class Agent22466497 extends Agent {
     if (a[0] != null) {pa = a.clone();}
     try {s = (Board) currentState.clone();} catch (Exception e) {System.out.println("Can't clone previous board state.");}
     r = currentReward; a = bestAction.clone();
-    writeStorage();
+    // We'll write to storage every 3rd move, so we don't block after each move.
+    /*
+    writeCount++;
+    if (writeCount == 3) {
+      writeStorage();
+      writeCount = 0;
+    }
+    */
     return bestAction;
 
   }
