@@ -117,7 +117,7 @@ public class ThreeChess{
     // Write to file at the end of each game for Agent22466497
     for (Agent bot : bots) {
       if (bot.getClass().getName().equals("threeChess.agents.Agent22466497")) {
-        //((Agent22466497) bot).writeStorage();
+        ((Agent22466497) bot).writeStorage();
         System.out.println("Printed Agent22466497's objects to storage.");
       }
     }
@@ -244,7 +244,7 @@ public class ThreeChess{
    * Run program with parameter "manual" for a game with moves added in the command line, "cheat" to ignore all rules, and no parameters to run a tournament between agents listed in bots.
    **/
   public static void main(String[] args){
-    Agent[] bots = {new RandomAgent(), new RandomAgent(), new Agent22466497()};
+    Agent[] bots = {new GreedyAgent(), new GreedyAgent(), new Agent22466497()};
     if(args.length > 0 && args[0].equals("manual")){
       bots = new Agent[] {new ManualAgent("A"), new ManualAgent("B"), new ManualAgent("C")};
       tournament(bots,60,0,true, null);
@@ -257,6 +257,6 @@ public class ThreeChess{
       playCheat();
     }
     //else tournament(bots,300,0,true,null);
-    else tournament(bots, 15, 20, false, null);
+    else tournament(bots, 10, 1000, false, null);
   }
 }
